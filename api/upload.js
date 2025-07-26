@@ -11,7 +11,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Filename is required' });
     }
 
-    const blob = await put(filename, req.body, {
+    // For Vercel Serverless Functions, pass the entire `req` object.
+    // The Vercel Blob SDK will correctly handle the stream.
+    const blob = await put(filename, req, {
       access: 'public',
     });
 
@@ -22,10 +24,9 @@ export default async function handler(req, res) {
   }
 }
 
+// To handle file uploads, we need to disable the default bodyParser.
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
+    bodyParser: false,
   },
 }; 
