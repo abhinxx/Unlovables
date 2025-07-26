@@ -39,17 +39,13 @@ class VideoGenerator {
     }
 
     // Main video generation function
-    async generateVideo(prompt, imageFile, imageDescription) {
+    async generateVideo(prompt, publicImageUrl, imageDescription, onProgress) {
         try {
-            console.log('Starting video generation...');
+            console.log('Starting video generation with public URL:', publicImageUrl);
             console.log('Using proxy API:', this.apiUrl);
             
             // Save prompt to file
             this.savePromptToFile(prompt);
-
-            // Convert image to base64
-            const imageUrl = await this.imageToBase64(imageFile);
-            console.log('Image converted to base64, length:', imageUrl.length);
             
             // Payload for proxy API
             const payload = {
@@ -63,7 +59,7 @@ class VideoGenerator {
                     {
                         type: "image_url",
                         image_url: {
-                            url: imageUrl
+                            url: publicImageUrl
                         }
                     }
                 ]
@@ -92,7 +88,7 @@ class VideoGenerator {
             console.log('Task created:', taskData);
 
             // Poll for completion
-            return await this.pollTaskStatus(taskData.id);
+            return await this.pollTaskStatus(taskData.id, onProgress);
 
         } catch (error) {
             console.error('Video generation failed:', error);
@@ -101,7 +97,7 @@ class VideoGenerator {
     }
 
     // Poll task status until completion
-    async pollTaskStatus(taskId) {
+    async pollTaskStatus(taskId, onProgress) {
         const maxAttempts = 60; // 5 minutes max
         let attempts = 0;
         
@@ -123,12 +119,21 @@ class VideoGenerator {
                 }
 
                 const status = await response.json();
-                console.log(`Attempt ${attempts + 1}: Status = ${status.status}`);
+                const currentStatus = (status && status.status) ? status.status.trim().toLowerCase() : '';
+                console.log(`Attempt ${attempts + 1}: Received status='${status.status}', normalized to='${currentStatus}'`);
 
-                if (status.status === 'completed') {
-                    console.log('Video generation completed!');
-                    return status.result;
-                } else if (status.status === 'failed') {
+                if (onProgress) {
+                    onProgress(status);
+                }
+
+                if (currentStatus === 'succeeded') {
+                    console.log('Video generation completed!', status.result);
+                    // The video URL is in the 'files' array of the result
+                    const videoUrl = status.result && status.result.files && status.result.files.length > 0
+                        ? status.result.files[0].url
+                        : null;
+                    return { ...status.result, video_url: videoUrl };
+                } else if (currentStatus === 'failed') {
                     throw new Error(`Task failed: ${status.error || 'Unknown error'}`);
                 }
 

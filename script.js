@@ -551,10 +551,37 @@ The base image is the starting frame - describe how it transitions and evolves o
         this.showProgress(true, 'Generating video... This may take several minutes.');
         
         try {
+            // Step 1: Upload image to get public URL
+            this.showProgress(true, 'Uploading base image...');
+            const uploadResponse = await fetch(`/api/upload?filename=${this.baseImage.name}`, {
+                method: 'POST',
+                body: this.baseImage,
+            });
+
+            if (!uploadResponse.ok) {
+                const errorData = await uploadResponse.json();
+                throw new Error(`Image upload failed: ${errorData.details || 'Unknown error'}`);
+            }
+
+            const { url: publicImageUrl } = await uploadResponse.json();
+            console.log('Public image URL:', publicImageUrl);
+
+            // Step 2: Generate video with public URL
+            this.showProgress(true, 'Sending video generation request...');
             const generator = new VideoGenerator();
             const imageDescription = document.getElementById('baseImageDescription').value.trim();
             
-            const result = await generator.generateVideo(finalPrompt, this.baseImage, imageDescription);
+            const onProgress = (status) => {
+                const progressDetails = document.getElementById('progressDetails');
+                progressDetails.style.display = 'block';
+                progressDetails.textContent = JSON.stringify(status, null, 2);
+
+                if (status.progress) {
+                    this.updateProgress(status.progress, `Generating video... Status: ${status.status}`);
+                }
+            };
+
+            const result = await generator.generateVideo(finalPrompt, publicImageUrl, imageDescription, onProgress);
             
             this.showProgress(false);
             this.showStatus('Video generation completed!', 'success');
@@ -571,6 +598,10 @@ The base image is the starting frame - describe how it transitions and evolves o
 
     displayGeneratedVideo(videoUrl) {
         const videoElement = document.getElementById('generatedVideo');
+        if (!videoUrl) {
+            this.showStatus('Video generation succeeded, but no video URL was returned.', 'error');
+            return;
+        }
         videoElement.src = videoUrl;
         
         document.getElementById('videoResult').style.display = 'block';
@@ -611,6 +642,7 @@ The base image is the starting frame - describe how it transitions and evolves o
         if (show) {
             progressContainer.style.display = 'block';
             progressText.textContent = text;
+            document.getElementById('progressDetails').style.display = 'none'; // Hide details on start
             this.updateProgress(0);
         } else {
             progressContainer.style.display = 'none';
