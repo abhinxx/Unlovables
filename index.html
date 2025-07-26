@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Generation Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎬 AI Video Generation Dashboard</h1>
+            <div class="header-info">
+                <span id="projectId" class="project-id">Project: Loading...</span>
+                <button id="settingsBtn" class="settings-btn">⚙️ Settings</button>
+            </div>
+        </header>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>API Configuration</h3>
+                <div class="form-group">
+                    <label for="openaiKey">OpenAI API Key:</label>
+                    <input type="text" id="openaiKey" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label for="bytedanceKey">ByteDance API Key:</label>
+                    <input type="text" id="bytedanceKey" placeholder="Enter ByteDance API key">
+                </div>
+
+                <button id="saveSettings" class="btn btn-primary">Save Settings</button>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Container 1: Script Input -->
+            <div class="card" id="scriptContainer">
+                <div class="card-header">
+                    <h3>📝 Script & Concept</h3>
+                    <span class="character-count">0 characters</span>
+                </div>
+                <div class="card-content">
+                    <textarea 
+                        id="scriptInput" 
+                        placeholder="Enter your video script or concept here... Describe the story, scenes, characters, and overall narrative you want to create."
+                        rows="8"
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- Container 2: Mood Board -->
+            <div class="card" id="moodBoardContainer">
+                <div class="card-header">
+                    <h3>🎨 Mood Board</h3>
+                    <button id="analyzeMoodBoard" class="btn btn-secondary" disabled>Analyze Images</button>
+                </div>
+                <div class="card-content">
+                    <!-- Image Upload Area -->
+                    <div class="upload-area" id="moodBoardUpload">
+                        <div class="upload-placeholder">
+                            <p>📸 Drag & drop images here or click to upload</p>
+                            <p class="upload-hint">Upload multiple images to define the visual style and mood</p>
+                            <input type="file" id="moodBoardFiles" multiple accept="image/*" hidden>
+                        </div>
+                    </div>
+
+                    <!-- Individual Image Analysis -->
+                    <div id="imageAnalysis" class="image-analysis"></div>
+
+                    <!-- Compiled Mood Board -->
+                    <div class="mood-board-result">
+                        <h4>🎯 Compiled Mood Board Description:</h4>
+                        <div id="finalMoodBoard" class="mood-board-text">
+                            Analysis will appear here after processing images...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Container 3: Base Image -->
+            <div class="card" id="baseImageContainer">
+                <div class="card-header">
+                    <h3>🖼️ Base Image</h3>
+                </div>
+                <div class="card-content">
+                    <div class="upload-area" id="baseImageUpload">
+                        <div class="upload-placeholder">
+                            <p>🎯 Upload your base image</p>
+                            <p class="upload-hint">This will be the starting point for video generation</p>
+                            <input type="file" id="baseImageFile" accept="image/*" hidden>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="baseImageDescription">What is this image?</label>
+                        <textarea 
+                            id="baseImageDescription" 
+                            placeholder="Describe this image... Is it a character, background, object, etc.?"
+                            rows="3"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Container 4: Final Prompt -->
+            <div class="card" id="finalPromptContainer">
+                <div class="card-header">
+                    <h3>🚀 Final Video Prompt</h3>
+                    <button id="generatePrompt" class="btn btn-secondary" disabled>Generate Prompt</button>
+                </div>
+                <div class="card-content">
+                    <div class="prompt-preview">
+                        <textarea 
+                            id="finalPrompt" 
+                            placeholder="Your detailed video generation prompt will appear here..."
+                            rows="10"
+                        ></textarea>
+                        <div class="prompt-stats">
+                            <span id="promptLength">0 characters</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Video Section -->
+        <div class="generate-section">
+            <button id="generateVideo" class="btn btn-primary btn-large" disabled>
+                🎬 Generate Video
+            </button>
+            <div class="generation-status" id="generationStatus"></div>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Processing...</div>
+        </div>
+
+        <!-- Video Result -->
+        <div class="video-result" id="videoResult" style="display: none;">
+            <h3>✨ Generated Video</h3>
+            <video id="generatedVideo" controls></video>
+            <div class="video-actions">
+                <button id="downloadVideo" class="btn btn-secondary">📥 Download</button>
+                <button id="downloadLog" class="btn btn-secondary">📄 Download Log</button>
+                <button id="generateAnother" class="btn btn-primary">🔄 Generate Another</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="video-generator.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
