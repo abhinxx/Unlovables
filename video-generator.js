@@ -2,7 +2,10 @@
 class VideoGenerator {
     constructor() {
         this.apiKey = localStorage.getItem('bytedance_api_key') || '';
-        this.apiUrl = 'https://ark.ap-southeast.bytepluses.com/api/v3/contents/generations/tasks';
+        // Use the proxy API endpoints instead of direct ByteDance API
+        this.baseUrl = window.location.origin; // Use current domain
+        this.apiUrl = `${this.baseUrl}/api/video`;
+        this.statusUrl = `${this.baseUrl}/api/video-status`;
     }
 
     // Save prompt to text file
@@ -35,14 +38,11 @@ class VideoGenerator {
         });
     }
 
-
-
     // Main video generation function
     async generateVideo(prompt, imageFile, imageDescription) {
         try {
             console.log('Starting video generation...');
-            console.log('API URL:', this.apiUrl);
-            console.log('API Key:', this.apiKey);
+            console.log('Using proxy API:', this.apiUrl);
             
             // Save prompt to file
             this.savePromptToFile(prompt);
@@ -51,8 +51,9 @@ class VideoGenerator {
             const imageUrl = await this.imageToBase64(imageFile);
             console.log('Image converted to base64, length:', imageUrl.length);
             
-            // Simple payload exactly like curl example
+            // Payload for proxy API
             const payload = {
+                apiKey: this.apiKey,
                 model: "seedance-1-0-lite-i2v-250428",
                 content: [
                     {
@@ -68,14 +69,13 @@ class VideoGenerator {
                 ]
             };
 
-            console.log('Making API call...');
+            console.log('Making API call through proxy...');
 
-            // Simple fetch exactly like curl
+            // Call proxy API instead of ByteDance directly
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             });
@@ -84,7 +84,7 @@ class VideoGenerator {
 
             if (!response.ok) {
                 const errorData = await response.text();
-                console.error('API Error:', errorData);
+                console.error('Proxy API Error:', errorData);
                 throw new Error(`API Error ${response.status}: ${errorData}`);
             }
 
@@ -109,10 +109,11 @@ class VideoGenerator {
 
         while (attempts < maxAttempts) {
             try {
-                const response = await fetch(`${this.apiUrl}/${taskId}`, {
+                // Use proxy API for status checking
+                const response = await fetch(`${this.statusUrl}?taskId=${taskId}&apiKey=${this.apiKey}`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${this.apiKey}`
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -143,11 +144,7 @@ class VideoGenerator {
 
         throw new Error('Task timed out after 5 minutes');
     }
-
-
 }
-
-
 
 // Export for use
 if (typeof module !== 'undefined' && module.exports) {
