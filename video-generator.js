@@ -132,12 +132,17 @@ class VideoGenerator {
                     // Try multiple possible locations for the video URL
                     let videoUrl = null;
                     
-                    // Option 1: status.result.files[0].url
-                    if (status.result && status.result.files && status.result.files.length > 0) {
+                    // Option 1: status.content.video_url (ByteDance actual location)
+                    if (status.content && status.content.video_url) {
+                        videoUrl = status.content.video_url;
+                        console.log('Found video URL in content.video_url:', videoUrl);
+                    }
+                    // Option 2: status.result.files[0].url
+                    else if (status.result && status.result.files && status.result.files.length > 0) {
                         videoUrl = status.result.files[0].url;
                         console.log('Found video URL in result.files[0].url:', videoUrl);
                     }
-                    // Option 2: status.result.video_url
+                    // Option 3: status.result.video_url
                     else if (status.result && status.result.video_url) {
                         videoUrl = status.result.video_url;
                         console.log('Found video URL in result.video_url:', videoUrl);
