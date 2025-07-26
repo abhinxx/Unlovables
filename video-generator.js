@@ -127,11 +127,48 @@ class VideoGenerator {
                 }
 
                 if (currentStatus === 'succeeded') {
-                    console.log('Video generation completed!', status.result);
-                    // The video URL is in the 'files' array of the result
-                    const videoUrl = status.result && status.result.files && status.result.files.length > 0
-                        ? status.result.files[0].url
-                        : null;
+                    console.log('Video generation completed!', JSON.stringify(status, null, 2));
+                    
+                    // Try multiple possible locations for the video URL
+                    let videoUrl = null;
+                    
+                    // Option 1: status.result.files[0].url
+                    if (status.result && status.result.files && status.result.files.length > 0) {
+                        videoUrl = status.result.files[0].url;
+                        console.log('Found video URL in result.files[0].url:', videoUrl);
+                    }
+                    // Option 2: status.result.video_url
+                    else if (status.result && status.result.video_url) {
+                        videoUrl = status.result.video_url;
+                        console.log('Found video URL in result.video_url:', videoUrl);
+                    }
+                    // Option 3: status.result.url
+                    else if (status.result && status.result.url) {
+                        videoUrl = status.result.url;
+                        console.log('Found video URL in result.url:', videoUrl);
+                    }
+                    // Option 4: status.video_url
+                    else if (status.video_url) {
+                        videoUrl = status.video_url;
+                        console.log('Found video URL in status.video_url:', videoUrl);
+                    }
+                    // Option 5: Look for any property containing 'url' in the result
+                    else if (status.result) {
+                        const resultKeys = Object.keys(status.result);
+                        for (const key of resultKeys) {
+                            if (key.toLowerCase().includes('url') && status.result[key]) {
+                                videoUrl = status.result[key];
+                                console.log(`Found video URL in result.${key}:`, videoUrl);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!videoUrl) {
+                        console.error('Video URL not found in response. Full response:', JSON.stringify(status, null, 2));
+                        console.error('Available result keys:', status.result ? Object.keys(status.result) : 'No result object');
+                    }
+                    
                     return { ...status.result, video_url: videoUrl };
                 } else if (currentStatus === 'failed') {
                     throw new Error(`Task failed: ${status.error || 'Unknown error'}`);
