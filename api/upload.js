@@ -11,9 +11,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Filename is required' });
     }
 
-    // For Vercel Serverless Functions, pass the entire `req` object.
-    // The Vercel Blob SDK will correctly handle the stream.
-    const blob = await put(filename, req, {
+    // Read the request body as a buffer
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+
+    // Upload to Vercel Blob
+    const blob = await put(filename, buffer, {
       access: 'public',
     });
 
